@@ -10,7 +10,7 @@ export default function ChartTitle({
 }) {
   return (
     <h2 className={`${chartTitle({})} flex items-center`}>
-      {Icon && <Icon className="mr-2 shrink-0 text-primary" size={16} />}{" "}
+      {Icon && <Icon className="mr-2 shrink-0 text-primary" size={26} />}{" "}
       {title}
     </h2>
   );
