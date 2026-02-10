@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ModelMap } from "@/lib/models/sections/AssetModels";
 
@@ -18,8 +19,9 @@ export async function GET(
 
         const data = await Model.find().sort({ createdAt: -1 });
         return NextResponse.json(data);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error occurred';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
 
@@ -40,8 +42,9 @@ export async function POST(
 
         const newItem = await Model.create(body);
         return NextResponse.json(newItem, { status: 201 });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error occurred';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
 
@@ -63,15 +66,16 @@ export async function PUT(
 
         const updatedItem = await Model.findByIdAndUpdate(id, updateData, { new: true });
         return NextResponse.json(updatedItem);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error occurred';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
 
 // Delete is placeholder for future manager approval logic
 export async function DELETE(
-    request: NextRequest,
-    { params }: { params: Promise<{ section: string }> }
+    _request: NextRequest,
+    _params: { params: Promise<{ section: string }> }
 ) {
     return NextResponse.json({ message: "Delete requires manager approval (Coming Soon)" }, { status: 403 });
 }

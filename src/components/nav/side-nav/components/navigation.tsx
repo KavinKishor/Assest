@@ -4,12 +4,37 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigations } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          setRole(data.user.role);
+        }
+      } catch {
+        // silent
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const filteredNavigations = navigations.filter((nav) => {
+    if (role === "employee") {
+      return nav.name === "Dashboard" || nav.name === "Ticket";
+    }
+    return true;
+  });
+
   return (
     <nav className="flex flex-col gap-y-2 px-3">
-      {navigations.map((navigation) => {
+      {filteredNavigations.map((navigation) => {
         const Icon = navigation.icon;
         const isActive = pathname === navigation.href || (pathname.startsWith(navigation.href) && navigation.href !== "/");
 

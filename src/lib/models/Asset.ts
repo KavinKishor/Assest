@@ -1,5 +1,5 @@
-import mongoose, { Schema, Document } from "mongoose";
-import { AssetVariant } from "@/types/asset";
+import mongoose, { Schema, type Document } from "mongoose";
+import type { AssetVariant } from "@/types/asset";
 
 export interface IAsset extends Document {
     title: string;

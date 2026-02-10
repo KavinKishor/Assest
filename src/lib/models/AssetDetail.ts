@@ -1,5 +1,5 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
-import { AssetCategory } from "@/types/asset";
+import mongoose, { Schema, type Document, type Model } from "mongoose";
+import type { AssetCategory } from "@/types/asset";
 
 export interface IAssetDetail extends Document {
     sNo: string;

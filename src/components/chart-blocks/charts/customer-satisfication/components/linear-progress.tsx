@@ -27,15 +27,20 @@ const getSpec = (
     xField: "value",
     yField: "type",
     seriesField: "type",
-    height: 10,
+    height: 20,
     cornerRadius: 10,
     progress: {
       style: {
-        cornerRadius: 0,
+        cornerRadius: 10,
       },
     },
+    track: {
+      style: {
+        fill: "rgba(0,0,0,0.05)",
+      }
+    },
     color: [color],
-    bandWidth: 10,
+    bandWidth: 20,
     padding: 0,
     tooltip: {
       trigger: ["click", "hover"],
@@ -47,22 +52,23 @@ const getSpec = (
           {
             key: label,
             value: (datum: Datum | undefined) =>
-              datum ? `${numberToPercentage(percentage)}` : "",
+              datum ? `${percentage}%` : "",
           },
         ],
       },
     },
     axes: [
       {
-        orient: "right",
+        orient: "left",
         type: "band",
-        domainLine: { visible: false },
-        tick: { visible: false },
-        label: {
-          formatMethod: () => numberToPercentage(percentage),
-        },
-        maxWidth: "60%",
-        width: 36,
+        visible: false,
+      },
+      {
+        orient: "bottom",
+        type: "linear",
+        visible: false,
+        min: 0,
+        max: 100,
       },
     ],
   };
@@ -73,12 +79,16 @@ export default function LinearProgress({
   color,
   percentage,
   icon,
+  displayValue,
 }: {
   label: string;
   color: string;
   percentage: number;
   icon: React.ReactNode;
+  displayValue?: string;
 }) {
+  const valueToShow = displayValue || numberToPercentage(percentage);
+
   return (
     <div>
       <div className="mb-1 flex items-center gap-x-2">
@@ -86,7 +96,7 @@ export default function LinearProgress({
         <div>
           <div className="text-xs text-muted-foreground">{label}</div>
           <div className="text-xl font-medium">
-            {numberToPercentage(percentage)}
+            {valueToShow}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftToLine, ArrowRightToLine, LayoutDashboard, Ticket, Layers, Settings, HelpCircle } from "lucide-react";
+import { ArrowLeftToLine, ArrowRightToLine, Settings, HelpCircle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Navigation from "./components/navigation";
@@ -26,7 +26,7 @@ export default function SideNav() {
       </button>
       <aside
         className={cn(
-          "fixed bottom-0 left-0 top-0 z-40 flex h-[100dvh] w-56 shrink-0 flex-col border-r border-border bg-white dark:bg-gray-950 tablet:sticky tablet:translate-x-0 transition-transform duration-300 ease-in-out",
+          "fixed bottom-0 left-0 top-0 z-40 flex h-[100dvh] w-56 shrink-0 flex-col border-r border-border bg-white dark:bg-black tablet:sticky tablet:translate-x-0 transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

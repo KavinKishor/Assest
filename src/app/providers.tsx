@@ -5,6 +5,8 @@ import { ChartThemeProvider } from "@/components/providers/chart-theme-provider"
 import { ModeThemeProvider } from "@/components/providers/mode-theme-provider";
 
 import { Toaster } from "react-hot-toast";
+import { GlobalLoading, NavigationWatcher } from "@/components/global-loading";
+import { Suspense } from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -16,17 +18,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <ChartThemeProvider>
+          <GlobalLoading />
+          <Suspense fallback={null}>
+            <NavigationWatcher />
+          </Suspense>
           {children}
           <Toaster
-            position="top-right"
+            position="top-center"
             toastOptions={{
-              duration: 4000,
+              duration: 3000,
               style: {
                 borderRadius: '16px',
                 background: '#333',
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: '14px',
+                fontSize: '22px',
               },
               success: {
                 style: {

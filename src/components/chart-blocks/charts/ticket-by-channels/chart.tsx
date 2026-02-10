@@ -1,95 +1,101 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   type IPieChartSpec,
   VChart,
 } from "@visactor/react-vchart";
 import type { Datum } from "@visactor/vchart/esm/typings";
-import { ticketByChannels } from "@/data/ticket-by-channels";
 import { addThousandsSeparator } from "@/lib/utils";
 
-const data = ticketByChannels.reduce(
-  (acc, curr) => {
-    acc.push({
-      type: curr.type,
-      value: curr.value + (acc[acc.length - 1]?.value || 0),
-      realValue: curr.value,
-    });
-    return acc;
-  },
-  [] as { type: string; value: number; realValue: number }[],
-);
+export default function Chart({ data }: { data: { section?: string }[] }) {
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
 
-const totalTickets = data.reduce((acc, curr) => acc + curr.value, 0);
+    // Group by section
+    const grouped = data.reduce((acc: Record<string, number>, item) => {
+      const section = item.section || "Other";
+      acc[section] = (acc[section] || 0) + 1;
+      return acc;
+    }, {});
 
-const spec: IPieChartSpec = {
-  type: "pie",
-  legends: [
-    {
-      type: "discrete",
-      visible: true,
-      orient: "bottom",
-    },
-  ],
-  data: [
-    {
-      id: "id0",
-      values: ticketByChannels,
-    },
-  ],
-  valueField: "value",
-  categoryField: "type",
-  outerRadius: 1,
-  innerRadius: 0.88,
-  startAngle: -180,
-  padAngle: 0.6,
-  endAngle: 0,
-  centerY: "80%",
-  layoutRadius: "auto",
-  pie: {
-    style: {
-      cornerRadius: 6,
-    },
-  },
-  tooltip: {
-    trigger: ["click", "hover"],
-    mark: {
-      title: {
-        visible: false,
+    return Object.entries(grouped).map(([type, value]) => ({
+      type,
+      value,
+    }));
+  }, [data]);
+
+  const totalRequests = useMemo(() =>
+    chartData.reduce((acc: number, curr: { value: number }) => acc + curr.value, 0)
+    , [chartData]);
+
+  const spec: IPieChartSpec = useMemo(() => ({
+    type: "pie",
+    legends: [
+      {
+        type: "discrete",
+        visible: true,
+        orient: "bottom",
       },
-      content: [
-        {
-          key: (datum: Datum | undefined) => datum?.type,
-          value: (datum: Datum | undefined) => datum?.realValue,
-        },
-      ],
-    },
-  },
-  indicator: [
-    {
-      visible: true,
-      offsetY: "40%",
-      title: {
-        style: {
-          text: "Total Active Tickets",
-          fontSize: 16,
-          opacity: 0.6,
-        },
+    ],
+    data: [
+      {
+        id: "id0",
+        values: chartData,
+      },
+    ],
+    valueField: "value",
+    categoryField: "type",
+    outerRadius: 1,
+    innerRadius: 0.88,
+    startAngle: -180,
+    padAngle: 0.6,
+    endAngle: 0,
+    centerY: "80%",
+    layoutRadius: "auto",
+    pie: {
+      style: {
+        cornerRadius: 6,
       },
     },
-    {
-      visible: true,
-      offsetY: "64%",
-      title: {
-        style: {
-          text: addThousandsSeparator(totalTickets),
-          fontSize: 28,
+    tooltip: {
+      trigger: ["click", "hover"],
+      mark: {
+        title: {
+          visible: false,
         },
+        content: [
+          {
+            key: (datum: Datum | undefined) => datum?.type,
+            value: (datum: Datum | undefined) => datum?.value,
+          },
+        ],
       },
     },
-  ],
-};
+    indicator: [
+      {
+        visible: true,
+        offsetY: "40%",
+        title: {
+          style: {
+            text: "Total Requests",
+            fontSize: 16,
+            opacity: 0.6,
+          },
+        },
+      },
+      {
+        visible: true,
+        offsetY: "64%",
+        title: {
+          style: {
+            text: addThousandsSeparator(totalRequests),
+            fontSize: 28,
+          },
+        },
+      },
+    ],
+  }), [chartData, totalRequests]);
 
-export default function Chart() {
   return <VChart spec={spec} />;
 }

@@ -1,6 +1,12 @@
-import { AssetCategory } from "@/types/asset";
+import type { AssetSummary } from "@/types/asset";
 
-export const assetsData: AssetCategory[] = [
+interface AssetCategoryData {
+    id: string;
+    name: string;
+    assets: AssetSummary[];
+}
+
+export const assetsData: AssetCategoryData[] = [
     {
         id: "desktop-voip",
         name: "Desktop and VOIP Assets",

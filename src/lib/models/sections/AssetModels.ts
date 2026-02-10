@@ -133,6 +133,17 @@ const OthersSchema = new Schema({
     location: String
 }, baseOptions);
 
+// 11. Biometric Schema
+const BiometricSchema = new Schema({
+    deviceModel: String,
+    deviceType: String,
+    deviceName: String,
+    ipAddress: String,
+    mac: String,
+    vendor: String,
+    location: String
+}, baseOptions);
+
 // Unified/Simplified Schema for new sections
 const UnifiedAssetSchema = new Schema({
     assetId: { type: String, required: true },
@@ -152,6 +163,7 @@ export const Firewall = mongoose.models.Firewall || mongoose.model("Firewall", F
 export const NAS = mongoose.models.NAS || mongoose.model("NAS", NasSchema);
 export const CCTV = mongoose.models.CCTV || mongoose.model("CCTV", CctvSchema);
 export const Others = mongoose.models.Others || mongoose.model("Others", OthersSchema);
+export const Biometric = mongoose.models.Biometric || mongoose.model("Biometric", BiometricSchema);
 
 // Unified models
 const createUnified = (name: string) => mongoose.models[name] || mongoose.model(name, UnifiedAssetSchema);
@@ -163,7 +175,7 @@ export const Moniters = createUnified("Moniters");
 export const Keyboards = createUnified("Keyboards");
 export const Mouse = createUnified("Mouse");
 
-export const ModelMap: Record<string, any> = {
+export const ModelMap: Record<string, mongoose.Model<unknown>> = {
     desktop: Desktop,
     laptop: Laptop,
     server: Server,
@@ -174,6 +186,7 @@ export const ModelMap: Record<string, any> = {
     nas: NAS,
     cctv: CCTV,
     "other devices": Others,
+    biometric: Biometric,
     voip: Voip,
     "usb headphones": UsbHeadphones,
     "hard disk": HardDisk,

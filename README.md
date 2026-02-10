@@ -91,3 +91,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [VisActor](https://visactor.io/) - For the amazing visualization library
 - [Vercel](https://vercel.com) - For the incredible deployment platform
 - [Next.js](https://nextjs.org/) - For the awesome React framework
+
+
+## cloudflare quick tunnel 
+- start the application (localhost:3000)
+
+-google search cloudflared quick tunnel
+-install cloudflared tunnel to your pc (powershell or cmd)
+-check cloudflared is installed (in cmd or powershell type cloudflared --version)
+-cloudflared tunnel --url http://localhost:3000 (in cmd or powershell )
+-find the https link and use it
+----note----
+-cloudflared tunnel not support SSE/streaming. so it will not work for real time updates
