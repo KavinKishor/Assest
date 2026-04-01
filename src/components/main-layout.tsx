@@ -5,16 +5,18 @@ import { SideNav } from "@/components/nav";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/firstAuth";
+    const isAuthPage = pathname === "/login" || pathname === "/firstAuth";
+
 
     if (isAuthPage) {
         return <>{children}</>;
     }
 
     return (
-        <div className="flex min-h-[100dvh]">
+        <div className="flex h-screen overflow-hidden">
             <SideNav />
-            <div className="flex-grow overflow-auto">{children}</div>
+            <div className="flex-grow overflow-auto h-full bg-gray-50 dark:bg-background">{children}</div>
         </div>
     );
+
 }

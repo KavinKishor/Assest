@@ -82,8 +82,9 @@ function RegisterContent() {
             const data = await res.json();
 
             if (res.ok) {
-                toast.success("Email verified! You can now login.");
-                router.push("/login");
+                toast.success("Email verified! User is now active.");
+                router.push("/");
+
             } else {
                 toast.error(data.error || "Verification failed");
             }
@@ -192,6 +193,7 @@ function RegisterContent() {
                                                 <option value="CEO" className="bg-white dark:bg-gray-950">CEO</option>
                                                 <option value="employee" className="bg-white dark:bg-gray-950">Employee</option>
                                             </select>
+
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-blue-500 transition-colors">
                                                 <ChevronDown size={14} />
                                             </div>
@@ -234,13 +236,9 @@ function RegisterContent() {
                                     </Button>
                                 </form>
 
-                                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-900 text-center">
-                                    <p className="text-sm text-gray-500 font-medium">
-                                        Already have an account?{" "}
-                                        <button onClick={() => router.push("/login")} className="text-blue-600 font-bold hover:underline">Sign In</button>
-                                    </p>
-                                </div>
+                                {/* Sign in link removed as it's now an internal admin page */}
                             </motion.div>
+
                         ) : (
                             <motion.div
                                 key="otp"

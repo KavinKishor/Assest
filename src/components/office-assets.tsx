@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
     Plus, X, ChevronLeft, ChevronRight, Hash, User, MapPin, Layers, Calendar,
     Monitor, Layout, Lightbulb, Armchair, Wind, Droplets, Home, Battery,
     ShieldAlert, Truck, Smartphone, HardDrive, Archive, Umbrella, Cpu,
-    Globe, Edit2, Trash2
+    Globe, Edit2, Trash2, Coffee, Flame, Sparkles, Bed, Tv, Refrigerator, Bath,
+    Home as House, Fan, GlassWater, ScrollText, Layers as LayersIcon
 } from "lucide-react";
 import clsx from "clsx";
 import toast from "react-hot-toast";
@@ -14,23 +15,82 @@ import { useLoading } from "@/hooks/use-loading";
 // Reuse AssetCard for consistency
 import { AssetCard } from "./assets";
 
-const SECTIONS = [
-    { id: "overall", name: "Overall", icon: Globe },
-    { id: "desk", name: "Desks", icon: Layout },
-    { id: "lights", name: "Lights", icon: Lightbulb },
-    { id: "chairs", name: "Chairs", icon: Armchair },
-    { id: "ac", name: "Air Condition", icon: Wind },
-    { id: "ro facility", name: "RO Facility", icon: Droplets },
-    { id: "sofa", name: "Sofa", icon: Home },
-    { id: "ups and battery", name: "UPS & Battery", icon: Battery },
-    { id: "fireextinguisher", name: "Fire Extinguisher", icon: ShieldAlert },
-    { id: "vehicles", name: "Vehicles", icon: Truck },
-    { id: "mobile chargers", name: "Mobile Chargers", icon: Smartphone },
-    { id: "racks", name: "Racks", icon: HardDrive },
-    { id: "cupboards", name: "Cupboards", icon: Archive },
-    { id: "umbrella", name: "Umbrella", icon: Umbrella },
-    { id: "others", name: "Others", icon: Cpu },
+const CATEGORIES = [
+    { id: "overall", name: "Overall", icon: Globe, color: "blue" },
+    { id: "electrical", name: "Electrical/Electronics", icon: Cpu, color: "blue" },
+    { id: "devotional", name: "Devotional", icon: Flame, color: "orange" },
+    { id: "cafeteria", name: "Cafeteria", icon: Coffee, color: "green" },
+    { id: "indoor", name: "Indoor Assets", icon: Home, color: "purple" },
+    { id: "cleaning", name: "Cleaning Accessories", icon: Sparkles, color: "indigo" },
+    { id: "frontoffice", name: "Frontoffice Assets", icon: User, color: "red" },
+    { id: "guesthouse", name: "Guest House Assets", icon: House, color: "teal" },
 ];
+
+const SECTIONS = [
+    { id: "desk", name: "Desks", icon: Layout, categoryId: "indoor" },
+    { id: "lights", name: "Lights", icon: Lightbulb, categoryId: "electrical" },
+    { id: "chairs", name: "Chairs", icon: Armchair, categoryId: "indoor" },
+    { id: "ac", name: "Air Condition", icon: Wind, categoryId: "electrical" },
+    { id: "ro facility", name: "RO Facility", icon: Droplets, categoryId: "cafeteria" },
+    { id: "sofa", name: "Sofa", icon: Home, categoryId: "frontoffice" },
+    { id: "ups and battery", name: "UPS & Battery", icon: Battery, categoryId: "electrical" },
+    { id: "fireextinguisher", name: "Fire Extinguisher", icon: ShieldAlert, categoryId: "indoor" },
+    { id: "vehicles", name: "Vehicles", icon: Truck, categoryId: "indoor" },
+    { id: "mobile chargers", name: "Mobile Chargers", icon: Smartphone, categoryId: "electrical" },
+    { id: "racks", name: "Racks", icon: HardDrive, categoryId: "indoor" },
+    { id: "cupboards", name: "Cupboards", icon: Archive, categoryId: "indoor" },
+    { id: "umbrella", name: "Umbrella", icon: Umbrella, categoryId: "indoor" },
+    { id: "devotional", name: "Devotional Items", icon: Flame, categoryId: "devotional" },
+    { id: "cleaning accessories", name: "Cleaning Assets", icon: Sparkles, categoryId: "cleaning" },
+    // Guest House specific
+    { id: "air cooler", name: "Air Coolers", icon: Wind, categoryId: "guesthouse" },
+    { id: "bed", name: "Beds", icon: Bed, categoryId: "guesthouse" },
+    { id: "pillows", name: "Pillows", icon: ScrollText, categoryId: "guesthouse" },
+    { id: "bed sheet", name: "Bed Sheets", icon: ScrollText, categoryId: "guesthouse" },
+    { id: "bed cover", name: "Bed Covers", icon: LayersIcon, categoryId: "guesthouse" },
+    { id: "plastic rack", name: "Plastic Racks", icon: HardDrive, categoryId: "guesthouse" },
+    { id: "fan", name: "Fans", icon: Fan, categoryId: "guesthouse" },
+    { id: "glass tumbler", name: "Glass Tumblers", icon: GlassWater, categoryId: "guesthouse" },
+    { id: "wardrobe", name: "Wardrobes", icon: Archive, categoryId: "guesthouse" },
+    { id: "television", name: "Televisions", icon: Tv, categoryId: "guesthouse" },
+    { id: "refrigerator", name: "Refrigerators", icon: Refrigerator, categoryId: "guesthouse" },
+    { id: "geyser", name: "Geysers", icon: Bath, categoryId: "guesthouse" },
+    { id: "guest house others", name: "Other GH Assets", icon: House, categoryId: "guesthouse" },
+    { id: "others", name: "Others", icon: Cpu, categoryId: "indoor" },
+];
+
+const ICON_OPTIONS = [
+    { name: "Box", icon: Layout },
+    { name: "Monitor", icon: Monitor },
+    { name: "Flash", icon: Lightbulb },
+    { name: "Chair", icon: Armchair },
+    { name: "Wind", icon: Wind },
+    { name: "Droplet", icon: Droplets },
+    { name: "Home", icon: Home },
+    { name: "Battery", icon: Battery },
+    { name: "Truck", icon: Truck },
+    { name: "Phone", icon: Smartphone },
+    { name: "Drive", icon: HardDrive },
+    { name: "Archive", icon: Archive },
+    { name: "Fan", icon: Fan },
+    { name: "Glass", icon: GlassWater },
+    { name: "Paper", icon: ScrollText },
+    { name: "Bed", icon: Bed },
+    { name: "TV", icon: Tv },
+    { name: "Fridge", icon: Refrigerator },
+    { name: "Bath", icon: Bath },
+    { name: "Star", icon: Sparkles },
+    { name: "Coffee", icon: Coffee },
+];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+    Box: Layout, Monitor, Layout, Lightbulb, Armchair, Wind, Droplets, Home, Battery,
+    Truck, Smartphone, HardDrive, Archive, Fan, GlassWater, ScrollText, Bed, Tv,
+    Refrigerator, Bath, Sparkles, Coffee, Cpu, Globe, User, MapPin, Layers, Calendar,
+    ShieldAlert, Umbrella, Flame,
+};
+
 
 const UNIFIED_HEADERS = [
     { label: "S.NO", key: "index" },
@@ -43,7 +103,7 @@ const UNIFIED_HEADERS = [
     { label: "REMARKS", key: "remarks" }
 ];
 
-const COLORS = ["blue", "green", "orange", "purple", "red"];
+const COLORS = ["blue", "green", "orange", "purple", "red", "indigo", "pink"];
 
 export default function OfficeAssets() {
     const [activeSection, setActiveSection] = useState("overall");
@@ -55,8 +115,25 @@ export default function OfficeAssets() {
     const [formData, setFormData] = useState<Record<string, unknown>>({});
     const [editingId, setEditingId] = useState<string | null>(null);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [dynamicSections, setDynamicSections] = useState<{ id: string; name: string; icon: React.ComponentType<{ size?: number }>; categoryId: string; isDynamic: boolean }[]>([]);
+    const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
+    const [newSectionData, setNewSectionData] = useState({ name: "", iconName: "Box" });
     const navRef = useRef<HTMLDivElement>(null);
     const { withLoading } = useLoading();
+
+    const fetchDynamicSections = useCallback(async () => {
+        try {
+            const res = await fetch("/api/office-assets/sections");
+            const data = await res.json();
+            setDynamicSections(data.map((s: { slug: string; name: string; iconName: string; categoryId: string }) => ({
+                id: s.slug,
+                name: s.name,
+                icon: ICON_MAP[s.iconName] || ICON_MAP.Box,
+                categoryId: s.categoryId,
+                isDynamic: true
+            })));
+        } catch { /* silent */ }
+    }, []);
 
     const fetchUserRole = async () => {
         try {
@@ -97,13 +174,47 @@ export default function OfficeAssets() {
     useEffect(() => {
         fetchUserRole();
         fetchSummary();
-    }, []);
+        fetchDynamicSections();
+    }, [fetchDynamicSections]);
+
+    const allSections = useMemo(() => [...SECTIONS, ...dynamicSections], [dynamicSections]);
 
     useEffect(() => {
-        if (activeSection !== "overall") {
+        const isSection = allSections.some(s => s.id === activeSection);
+        if (isSection) {
             fetchTableData(activeSection);
         }
-    }, [activeSection, fetchTableData]);
+    }, [activeSection, fetchTableData, allSections]);
+
+    const handleAddSection = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await withLoading(async () => {
+            try {
+                const res = await fetch("/api/office-assets/sections", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ...newSectionData,
+                        categoryId: activeSection,
+                        categoryType: "Office"
+                    }),
+                });
+
+                if (res.ok) {
+                    toast.success("Section Created Successfully");
+                    setIsAddSectionOpen(false);
+                    setNewSectionData({ name: "", iconName: "Box" });
+                    fetchDynamicSections();
+                    fetchSummary();
+                } else {
+                    const result = await res.json();
+                    toast.error(result.error || "Failed to create section");
+                }
+            } catch {
+                toast.error("Network Error");
+            }
+        });
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -196,25 +307,25 @@ export default function OfficeAssets() {
     }
 
     return (
-        <div className="flex flex-col h-full bg-gray-50 dark:bg-background">
-            <div className="sticky top-0 z-30 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b dark:border-gray-800 px-4 py-3">
+        <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-background">
+            <div className="sticky top-16 z-30 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b dark:border-gray-800 px-4 py-3">
                 <div className="relative max-w-7xl mx-auto flex items-center">
                     <button onClick={() => scroll("left")} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full mr-2 hidden md:block group">
                         <ChevronLeft size={20} className="text-gray-500 group-hover:text-blue-600" />
                     </button>
                     <div ref={navRef} className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-2 scroll-smooth px-1">
-                        {SECTIONS.map((section) => (
+                        {CATEGORIES.map((cat) => (
                             <button
-                                key={section.id}
-                                onClick={() => setActiveSection(section.id)}
+                                key={cat.id}
+                                onClick={() => setActiveSection(cat.id)}
                                 className={clsx(
                                     "flex items-center gap-2 px-5 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all",
-                                    activeSection === section.id
+                                    activeSection === cat.id || allSections.find(s => s.id === activeSection)?.categoryId === cat.id
                                         ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30 scale-105"
                                         : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 )}
                             >
-                                <section.icon size={16} /> {section.name}
+                                <cat.icon size={16} /> {cat.name}
                             </button>
                         ))}
                     </div>
@@ -228,12 +339,22 @@ export default function OfficeAssets() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex items-center gap-3">
                         <div className="p-4 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/10">
-                            {(() => { const SectionIcon = SECTIONS.find(s => s.id === activeSection)?.icon || Monitor; return <SectionIcon size={28} />; })()}
+                            {(() => {
+                                const cat = CATEGORIES.find(c => c.id === activeSection);
+                                const sec = allSections.find(s => s.id === activeSection);
+                                const Icon = cat?.icon || sec?.icon || Monitor;
+                                return <Icon size={28} />;
+                            })()}
                         </div>
                         <div>
-                            <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{activeSection === 'overall' ? 'OFFICE ASSETS' : SECTIONS.find(s => s.id === activeSection)?.name}</h2>
+                            <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                                {activeSection === 'overall' ? 'OFFICE ASSETS' :
+                                    (CATEGORIES.find(c => c.id === activeSection)?.name || SECTIONS.find(s => s.id === activeSection)?.name)}
+                            </h2>
                             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                {activeSection === "overall" ? `Tracking Office Inventory` : `Total ${summaryCounts[activeSection] || 0} items`}
+                                {activeSection === "overall" ? `Tracking Office Inventory` :
+                                    allSections.some(s => s.id === activeSection) ? `Total ${summaryCounts[activeSection] || 0} items` :
+                                        `Explore ${CATEGORIES.find(c => c.id === activeSection)?.name}`}
                             </p>
                         </div>
                     </div>
@@ -242,7 +363,16 @@ export default function OfficeAssets() {
                             const nextOpen = !isAddEntryOpen;
                             setIsAddEntryOpen(nextOpen);
                             if (!nextOpen) { setEditingId(null); setFormData({}); }
-                            else if (!editingId) setSelectedAssetType(activeSection === "overall" ? "desk" : activeSection);
+                            else if (!editingId) {
+                                if (activeSection === "overall") {
+                                    setSelectedAssetType("desk");
+                                } else if (CATEGORIES.some(c => c.id === activeSection)) {
+                                    const firstSec = allSections.find(s => s.categoryId === activeSection);
+                                    setSelectedAssetType(firstSec ? firstSec.id : "desk");
+                                } else {
+                                    setSelectedAssetType(activeSection);
+                                }
+                            }
                         }}
                         className={clsx("flex items-center gap-2 px-8 py-3 rounded-2xl font-black transition-all shadow-xl active:scale-95", isAddEntryOpen ? "bg-red-500 text-white" : "bg-blue-600 text-white")}
                     >
@@ -264,17 +394,24 @@ export default function OfficeAssets() {
                                             onChange={(e) => { setSelectedAssetType(e.target.value); setFormData({}); }}
                                             className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 dark:border-gray-700 rounded-2xl text-base font-bold outline-none focus:border-blue-500 transition-all appearance-none"
                                         >
-                                            {SECTIONS.filter(s => s.id !== 'overall').map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                            {CATEGORIES.filter(c => c.id !== 'overall').map(cat => (
+                                                <optgroup key={cat.id} label={cat.name} className="bg-white dark:bg-gray-800 text-gray-500">
+                                                    {allSections.filter(s => s.categoryId === cat.id).map(s => (
+                                                        <option key={s.id} value={s.id} className="text-gray-900 dark:text-white font-bold">{s.name}</option>
+                                                    ))}
+                                                </optgroup>
+                                            ))}
                                         </select>
                                     </div>
                                 )}
                                 {UNIFIED_HEADERS.filter(h => h.key !== 'index').map((h) => (
                                     <div key={h.key}>
-                                        <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">
+                                        <label className="flex items-start gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">
                                             {h.icon && <h.icon size={12} />}
                                             {h.label}
                                         </label>
                                         <input
+                                            required={h.key === 'assetId'}
                                             type={h.key === 'quantity' ? 'number' : h.key.toLowerCase().includes('date') ? 'date' : 'text'}
                                             value={(formData[h.key] as string) || ""}
                                             onChange={(e) => setFormData({ ...formData, [h.key]: e.target.value })}
@@ -292,20 +429,61 @@ export default function OfficeAssets() {
                 )}
 
                 {activeSection === "overall" ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {SECTIONS.filter(s => s.id !== 'overall').map((section, idx) => (
-                            <AssetCard
-                                key={idx}
-
-                                title={section.name}
-                                count={summaryCounts[section.id] || 0}
-                                variant={COLORS[idx % COLORS.length] as "blue" | "green" | "orange" | "purple" | "red"}
-                                Icon={section.icon}
-                                size="sm"
-                                onClick={() => setActiveSection(section.id)}
-
-                            />
-                        ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {CATEGORIES.filter(c => c.id !== 'overall').map((cat, idx) => {
+                            const catSections = allSections.filter(s => s.categoryId === cat.id);
+                            const catCount = catSections.reduce((acc, s) => acc + (summaryCounts[s.id] || 0), 0);
+                            return (
+                                <div key={cat.id} className="group relative">
+                                    <AssetCard
+                                        title={cat.name}
+                                        count={catCount}
+                                        variant={COLORS[idx % COLORS.length] as "blue" | "green" | "orange" | "purple" | "red"}
+                                        Icon={cat.icon}
+                                        size="sm"
+                                        onClick={() => setActiveSection(cat.id)}
+                                    />
+                                    <div className="mt-4 flex flex-wrap gap-2">
+                                        {catSections.slice(0, 3).map(s => (
+                                            <span key={s.id} className="text-[10px] font-black uppercase tracking-widest px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-md">
+                                                {s.name}
+                                            </span>
+                                        ))}
+                                        {catSections.length > 3 && <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-md">+{catSections.length - 3}</span>}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : CATEGORIES.find(c => c.id === activeSection) ? (
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center bg-white dark:bg-card p-4 rounded-2xl border dark:border-gray-800 shadow-sm">
+                            <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Available Sections</h3>
+                            <button
+                                onClick={() => setIsAddSectionOpen(true)}
+                                className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                            >
+                                <Plus size={16} /> Add Section
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {allSections.filter(s => s.categoryId === activeSection).map((section, idx) => (
+                                <AssetCard
+                                    key={section.id}
+                                    title={section.name}
+                                    count={summaryCounts[section.id] || 0}
+                                    variant={COLORS[idx % COLORS.length] as "blue" | "green" | "orange" | "purple" | "red"}
+                                    Icon={section.icon}
+                                    size="sm"
+                                    onClick={() => setActiveSection(section.id)}
+                                />
+                            ))}
+                        </div>
+                        {allSections.filter(s => s.categoryId === activeSection).length === 0 && (
+                            <div className="text-center py-20 bg-white dark:bg-gray-900/40 rounded-3xl border-2 border-dashed dark:border-gray-800">
+                                <p className="text-gray-400 font-bold uppercase tracking-widest italic">No asset types defined for this category yet</p>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="bg-white dark:bg-card rounded-[2.5rem] border dark:border-gray-800 shadow-sm overflow-hidden min-h-[400px]">
@@ -354,6 +532,51 @@ export default function OfficeAssets() {
                     </div>
                 )}
             </div>
+
+            {/* Add Section Modal */}
+            {isAddSectionOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-card w-full max-w-md rounded-[2.5rem] border dark:border-gray-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="px-8 py-6 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-600 text-white">
+                            <h2 className="text-xl font-black uppercase tracking-tight">New Section</h2>
+                            <button onClick={() => setIsAddSectionOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><X size={20} /></button>
+                        </div>
+                        <form onSubmit={handleAddSection} className="p-8 space-y-6">
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Section Name</label>
+                                <input
+                                    required
+                                    value={newSectionData.name}
+                                    onChange={e => setNewSectionData({ ...newSectionData, name: e.target.value })}
+                                    className="w-full px-5 py-3 bg-gray-50 dark:bg-gray-800 border-2 dark:border-gray-700 rounded-2xl text-sm font-bold focus:border-indigo-500 outline-none transition-all"
+                                    placeholder="e.g. Paper Assets"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Select Icon</label>
+                                <div className="grid grid-cols-6 gap-2 mt-2 h-40 overflow-y-auto p-2 border-2 dark:border-gray-700 rounded-2xl no-scrollbar">
+                                    {ICON_OPTIONS.map(opt => (
+                                        <button
+                                            key={opt.name}
+                                            type="button"
+                                            onClick={() => setNewSectionData({ ...newSectionData, iconName: opt.name })}
+                                            className={clsx(
+                                                "p-3 rounded-xl flex items-center justify-center transition-all",
+                                                newSectionData.iconName === opt.name ? "bg-indigo-600 text-white shadow-lg" : "bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                            )}
+                                        >
+                                            <opt.icon size={20} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl hover:-translate-y-1 transition-all active:scale-95">
+                                Create Section
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

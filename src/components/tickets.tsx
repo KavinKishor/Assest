@@ -102,7 +102,7 @@ export default function Tickets() {
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ id: string, name: string, role: string } | null>(null);
-    const [itAssociates, setItAssociates] = useState<{ _id: string, name: string }[]>([]);
+    const [itAssociates, setItAssociates] = useState<{ _id: string, name: string, role: string, isVerified?: boolean }[]>([]);
     const [updateComment, setUpdateComment] = useState("");
     const [managerComment, setManagerComment] = useState("");
     const [pendingAssignee, setPendingAssignee] = useState("");
@@ -165,6 +165,10 @@ export default function Tickets() {
                 setSelectedTicket(data.ticket);
                 setTrackingHistory(data.tracking);
                 setPendingAssignee(data.ticket.assignedTo?._id || "");
+
+                // Re-fetch IT associates to ensure list is fresh when modal opens
+                fetchITAssociates();
+
                 setIsDetailsModalOpen(true);
             } catch {
                 toast.error("Failed to load ticket details");
@@ -192,9 +196,10 @@ export default function Tickets() {
                 setItAssociates(data);
             }
         } catch {
-            // silent
+            toast.error("Network error: Could not load IT staff list");
         }
     };
+
 
     const fetchAssetRequests = async () => {
         setLoading(true);
@@ -247,6 +252,7 @@ export default function Tickets() {
         const handleRefresh = () => {
             fetchTickets();
             fetchAssetRequests();
+            fetchITAssociates();
         };
 
         window.addEventListener("refresh-data", handleRefresh);
@@ -1038,7 +1044,7 @@ export default function Tickets() {
 
                                         <div className="flex flex-wrap items-center justify-between gap-4">
                                             <div className="flex flex-wrap items-center gap-3">
-                                                {(currentUser?.role === "Manager" || currentUser?.role === "VP") && selectedTicket.approvalStatus === "Pending" && (
+                                                {(["Manager", "VP", "CEO", "IT_Admin"].includes(currentUser?.role || "")) && selectedTicket.approvalStatus === "Pending" && (
                                                     <>
                                                         <button
                                                             onClick={() => {
@@ -1064,7 +1070,7 @@ export default function Tickets() {
                                                     </>
                                                 )}
 
-                                                {(currentUser?.role === "Manager" || currentUser?.role === "VP") && (
+                                                {(["Manager", "VP", "CEO", "IT_Admin"].includes(currentUser?.role || "")) && (
                                                     <select
                                                         onChange={(e) => {
                                                             const newValue = e.target.value;
@@ -1077,16 +1083,16 @@ export default function Tickets() {
                                                         value={selectedTicket.approvalStatus === "Pending" ? pendingAssignee : (selectedTicket.assignedTo?._id || "")}
                                                         className="px-4 py-2.5 bg-white dark:bg-background border-2 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:border-blue-500"
                                                     >
-                                                        <option value="">Assign Associate</option>
-                                                        {itAssociates
-                                                            .filter(it => it._id !== selectedTicket.createdBy._id)
-                                                            .map(it => (
-                                                                <option key={it._id} value={it._id}>{it.name}</option>
-                                                            ))}
+                                                        <option value="">Select IT Associate</option>
+                                                        {itAssociates.map(it => (
+                                                            <option key={it._id} value={it._id}>
+                                                                {it.name} ({it.role}) {!it.isVerified && "[Unverified]"}
+                                                            </option>
+                                                        ))}
                                                     </select>
                                                 )}
 
-                                                {selectedTicket.approvalStatus === "Approved" && (currentUser?.id === String(selectedTicket.assignedTo?._id) || currentUser?.role === "IT_Admin" || currentUser?.role === "Manager" || currentUser?.role === "VP") && (
+                                                {selectedTicket.approvalStatus === "Approved" && (currentUser?.id === String(selectedTicket.assignedTo?._id) || currentUser?.role === "IT_Admin" || currentUser?.role === "Manager" || currentUser?.role === "VP" || currentUser?.role === "CEO") && (
                                                     <select
                                                         onChange={(e) => handleUpdateTicket(selectedTicket._id, { currentStatus: e.target.value })}
                                                         value={selectedTicket.currentStatus}

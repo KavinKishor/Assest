@@ -1,4 +1,4 @@
-import { Gauge, type LucideIcon, MessagesSquare, Monitor, Building2 } from "lucide-react";
+import { Gauge, type LucideIcon, MessagesSquare, Monitor, Building2, LayoutPanelLeft } from "lucide-react";
 
 export type SiteConfig = typeof siteConfig;
 export type Navigation = {
@@ -8,7 +8,7 @@ export type Navigation = {
 };
 
 export const siteConfig = {
-    title: "Abc Dashboard",
+    title: "Assets Management",
     description: "The Dashboard",
 };
 
@@ -27,6 +27,11 @@ export const navigations: Navigation[] = [
         icon: Building2,
         name: "Office Assets",
         href: "/office-assets",
+    },
+    {
+        icon: LayoutPanelLeft,
+        name: "Softwares",
+        href: "/softwares",
     },
     {
         icon: MessagesSquare,

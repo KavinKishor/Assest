@@ -4,39 +4,39 @@ import * as jose from "jose";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-fallback-secret-key-keep-it-safe";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     // Public paths that don't require authentication
-    const isPublicPath = path === "/login" || path === "/register" || path === "/firstAuth" || path.startsWith("/api/auth");
+    const isPublicPath = path === "/login" || path.startsWith("/api/auth");
+
+    // Paths that require IT_Admin role
+    const isAdminOnlyPath = path === "/register" || path === "/firstAuth";
 
     const token = request.cookies.get("auth_token")?.value || "";
 
+    // Handle Public Paths
     if (isPublicPath && token) {
-        // If user is logged in and trying to access auth pages, redirect to dashboard
-        try {
-            const secret = new TextEncoder().encode(JWT_SECRET);
-            const { payload } = await jose.jwtVerify(token, secret);
-            const _role = payload.role as string;
-
-            // Redirect base on role? Usually dashboard is safe.
-            return NextResponse.redirect(new URL("/", request.nextUrl));
-        } catch {
-            // Token invalid, let them stay on public path
-        }
+        // If user is logged in and trying to access login, redirect to dashboard
+        return NextResponse.redirect(new URL("/", request.nextUrl));
     }
 
-    if (!isPublicPath && !token) {
+    if (!isPublicPath && !isAdminOnlyPath && !token) {
         // If user is not logged in and trying to access protected pages, redirect to login
         return NextResponse.redirect(new URL("/login", request.nextUrl));
     }
 
     // Role-based access control
-    if (!isPublicPath && token) {
+    if (token) {
         try {
             const secret = new TextEncoder().encode(JWT_SECRET);
             const { payload } = await jose.jwtVerify(token, secret);
             const role = payload.role as string;
+
+            // Restrict /register and /firstAuth to IT_Admin
+            if (isAdminOnlyPath && role !== "IT_Admin") {
+                return NextResponse.redirect(new URL("/", request.nextUrl));
+            }
 
             if (role === "employee") {
                 const restrictedPaths = ["/assets", "/office-assets"];
@@ -47,6 +47,9 @@ export async function middleware(request: NextRequest) {
         } catch {
             return NextResponse.redirect(new URL("/login", request.nextUrl));
         }
+    } else if (isAdminOnlyPath) {
+        // If trying to access admin-only path without token
+        return NextResponse.redirect(new URL("/login", request.nextUrl));
     }
 
     return NextResponse.next();
@@ -65,3 +68,4 @@ export const config = {
         "/firstAuth",
     ],
 };
+

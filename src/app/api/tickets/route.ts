@@ -17,15 +17,16 @@ export async function GET() {
         await connectToDatabase();
 
         let query = {};
-        if (session.role === "Manager" || session.role === "IT_Admin" || session.role === "VP") {
+        const isITOrManagement = ["IT_Admin", "IT_Associate", "Manager", "VP", "CEO"].includes(session.role);
+
+        if (isITOrManagement) {
             query = {};
-        } else if (session.role === "IT_Associate") {
-            // Associates only see tickets assigned to them
-            query = { assignedTo: session.id };
         } else {
             // Employees (or anyone else) only see tickets they created
             query = { createdBy: session.id };
         }
+
+
 
         const tickets = await Ticket.find(query)
             .populate("assignedTo", "name email role")

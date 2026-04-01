@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
     Monitor, Laptop, Smartphone, Server, Printer, Wifi,
     Keyboard, Mouse, Tv, Fingerprint, Cctv, Cpu,
@@ -16,6 +16,74 @@ import Lottie from "lottie-react";
 import loadingAnimation from "../../public/assestLoading.json";
 
 // Icon mapping
+const ICON_MAP: Record<string, React.ElementType> = {
+    Monitor, Laptop, Smartphone, Server, Printer, Wifi,
+    Keyboard, Mouse, Tv, Fingerprint, Cctv, Cpu,
+    Globe, MonitorStop, HardDrive, Hash, User, MapPin, Layers, Calendar, Shield,
+    Voip: FaHeadset, Headphones: FaHeadphones
+};
+
+interface ITSection {
+    id: string;
+    name: string;
+    icon: React.ElementType;
+    isDynamic: boolean;
+    fields: { label: string; key: string; icon?: React.ElementType }[];
+}
+
+const ICON_OPTIONS = [
+    { name: "Monitor", icon: Monitor },
+    { name: "Laptop", icon: Laptop },
+    { name: "Smartphone", icon: Smartphone },
+    { name: "Server", icon: Server },
+    { name: "Printer", icon: Printer },
+    { name: "Wifi", icon: Wifi },
+    { name: "Keyboard", icon: Keyboard },
+    { name: "Mouse", icon: Mouse },
+    { name: "Tv", icon: Tv },
+    { name: "Cctv", icon: Cctv },
+    { name: "Fingerprint", icon: Fingerprint },
+    { name: "Cpu", icon: Cpu },
+    { name: "HardDrive", icon: HardDrive },
+];
+
+const ALL_IT_FIELDS = [
+    { label: "ASSET ID", key: "assetId" },
+    { label: "HOST NAME / ASSET ID", key: "hostNameAssetId" },
+    { label: "CPU", key: "cpu" },
+    { label: "PROCESSOR", key: "processor" },
+    { label: "OPERATING SYSTEM", key: "os" },
+    { label: "IP ADDRESS", key: "ipAddress" },
+    { label: "IP ADDRESS (HOST)", key: "ipAddressHost" },
+    { label: "IP ADDRESS (VOIP)", key: "ipAddressVoip" },
+    { label: "MONITOR 1", key: "monitor1" },
+    { label: "MONITOR 2", key: "monitor2" },
+    { label: "KEYBOARD", key: "keyboard" },
+    { label: "MOUSE", key: "mouse" },
+    { label: "VOIP BRAND", key: "voipBrand" },
+    { label: "EXTENSION 1", key: "extension1" },
+    { label: "EXTENSION 2", key: "extension2" },
+    { label: "VOIP HEADPHONE", key: "voipHeadphone" },
+    { label: "USB HEADPHONE", key: "usbHeadphone" },
+    { label: "VENDOR", key: "vendor" },
+    { label: "LOCATION", key: "location" },
+    { label: "BRAND", key: "brand" },
+    { label: "MODEL", key: "model" },
+    { label: "SERIAL NUMBER", key: "serialNumber" },
+    { label: "TYPE", key: "type" },
+    { label: "MAC", key: "mac" },
+    { label: "MOBILE MODEL", key: "mobileModel" },
+    { label: "TEAM", key: "team" },
+    { label: "FIRMWARE VERSION", key: "firmwareVersion" },
+    { label: "STORAGE", key: "storage" },
+    { label: "DEVICE NAME", key: "deviceName" },
+    { label: "QUANTITY", key: "quantity" },
+    { label: "DEVICE MODEL", key: "deviceModel" },
+    { label: "DEVICE TYPE", key: "deviceType" },
+    { label: "DATE OF PURCHASE", key: "dateOfPurchase" },
+    { label: "STATUS", key: "status" },
+    { label: "REMARKS", key: "remarks" }
+];
 
 
 type CardSize = "sm" | "md" | "lg";
@@ -66,6 +134,8 @@ const _variantColors: Record<AssetVariant, string> = {
     orange: "text-orange-500",
     purple: "text-purple-500",
     red: "text-rose-500",
+    indigo: "text-indigo-500",
+    pink: "text-pink-500",
 };
 
 const _bottomLineColors: Record<AssetVariant, string> = {
@@ -74,6 +144,8 @@ const _bottomLineColors: Record<AssetVariant, string> = {
     orange: "bg-orange-500",
     purple: "bg-purple-500",
     red: "bg-rose-500",
+    indigo: "bg-indigo-500",
+    pink: "bg-pink-500",
 };
 const _variantStyles: Record<AssetVariant, string> = {
     blue: "from-cyan-500/10 to-blue-600/10 text-cyan-500 border-cyan-400/30",
@@ -81,6 +153,8 @@ const _variantStyles: Record<AssetVariant, string> = {
     orange: "from-yellow-400/10 to-orange-600/10 text-orange-500 border-orange-400/30",
     purple: "from-fuchsia-500/10 to-purple-600/10 text-purple-500 border-purple-400/30",
     red: "from-rose-500/10 to-red-600/10 text-rose-500 border-red-400/30",
+    indigo: "from-indigo-500/10 to-indigo-600/10 text-indigo-500 border-indigo-400/30",
+    pink: "from-pink-500/10 to-pink-600/10 text-pink-500 border-pink-400/30",
 };
 
 const lightVariantStyles: Record<AssetVariant, string> = {
@@ -89,9 +163,11 @@ const lightVariantStyles: Record<AssetVariant, string> = {
     orange: "bg-orange-500/90 border-orange-400/20 text-white shadow-lg shadow-orange-500/10 hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-500/20",
     purple: "bg-purple-500/90 border-purple-400/20 text-white shadow-lg shadow-purple-500/10 hover:bg-purple-600 hover:shadow-xl hover:shadow-purple-500/20",
     red: "bg-rose-500/90 border-rose-400/20 text-white shadow-lg shadow-rose-500/10 hover:bg-rose-600 hover:shadow-xl hover:shadow-rose-500/20",
+    indigo: "bg-indigo-500/90 border-indigo-400/20 text-white shadow-lg shadow-indigo-500/10 hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-500/20",
+    pink: "bg-pink-500/90 border-pink-400/20 text-white shadow-lg shadow-pink-500/10 hover:bg-pink-600 hover:shadow-xl hover:shadow-pink-500/20",
 };
 
-const COLORS: AssetVariant[] = ["blue", "green", "orange", "purple", "red"];
+const COLORS: AssetVariant[] = ["blue", "green", "orange", "purple", "red", "indigo", "pink"];
 
 export function AssetCard({
     title,
@@ -170,26 +246,26 @@ export function AssetCard({
     );
 }
 
-const SECTIONS = [
-    { id: "overall", name: "Overall", icon: Globe },
-    { id: "desktop", name: "Desktop", icon: Monitor },
-    { id: "laptop", name: "Laptop", icon: Laptop },
-    { id: "server", name: "Server", icon: Server },
-    { id: "printers", name: "Printers", icon: Printer },
-    { id: "wifi", name: "Wifi", icon: Wifi },
-    { id: "mobile", name: "Mobile", icon: Smartphone },
-    { id: "firewall", name: "Firewall", icon: Tv },
-    { id: "nas", name: "NAS", icon: Server },
-    { id: "cctv", name: "CCTV", icon: Cctv },
-    { id: "biometric", name: "Biometric", icon: Fingerprint },
-    { id: "other devices", name: "Other Devices", icon: Cpu },
-    { id: "voip", name: "Voip", icon: FaHeadset },
-    { id: "usb headphones", name: "USB Headphones", icon: FaHeadphones },
-    { id: "hard disk", name: "Hard Disk", icon: HardDrive },
-    { id: "pendrive", name: "Pendrive", icon: Hash },
-    { id: "moniters", name: "Moniters", icon: MonitorStop },
-    { id: "keyboards", name: "Keyboards", icon: Keyboard },
-    { id: "mouse", name: "Mouse", icon: Mouse },
+const SECTIONS: ITSection[] = [
+    { id: "overall", name: "Overall", icon: Globe, isDynamic: false, fields: [] },
+    { id: "desktop", name: "Desktop", icon: Monitor, isDynamic: false, fields: [] },
+    { id: "laptop", name: "Laptop", icon: Laptop, isDynamic: false, fields: [] },
+    { id: "server", name: "Server", icon: Server, isDynamic: false, fields: [] },
+    { id: "printers", name: "Printers", icon: Printer, isDynamic: false, fields: [] },
+    { id: "wifi", name: "Wifi", icon: Wifi, isDynamic: false, fields: [] },
+    { id: "mobile", name: "Mobile", icon: Smartphone, isDynamic: false, fields: [] },
+    { id: "firewall", name: "Firewall", icon: Tv, isDynamic: false, fields: [] },
+    { id: "nas", name: "NAS", icon: Server, isDynamic: false, fields: [] },
+    { id: "cctv", name: "CCTV", icon: Cctv, isDynamic: false, fields: [] },
+    { id: "biometric", name: "Biometric", icon: Fingerprint, isDynamic: false, fields: [] },
+    { id: "other devices", name: "Other Devices", icon: Cpu, isDynamic: false, fields: [] },
+    { id: "voip", name: "Voip", icon: FaHeadset, isDynamic: false, fields: [] },
+    { id: "usb headphones", name: "USB Headphones", icon: FaHeadphones, isDynamic: false, fields: [] },
+    { id: "hard disk", name: "Hard Disk", icon: HardDrive, isDynamic: false, fields: [] },
+    { id: "pendrive", name: "Pendrive", icon: Hash, isDynamic: false, fields: [] },
+    { id: "moniters", name: "Moniters", icon: MonitorStop, isDynamic: false, fields: [] },
+    { id: "keyboards", name: "Keyboards", icon: Keyboard, isDynamic: false, fields: [] },
+    { id: "mouse", name: "Mouse", icon: Mouse, isDynamic: false, fields: [] },
 ];
 
 const SECTION_TABLE_HEADERS: Record<string, { label: string; key: string; icon?: React.ElementType }[]> = {
@@ -347,11 +423,48 @@ export default function Assets() {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [_importing, setImporting] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [dynamicSections, setDynamicSections] = useState<any[]>([]);
+    const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
+    const [newSectionData, setNewSectionData] = useState({ 
+        name: "", 
+        iconName: "Monitor",
+        selectedFields: ["assetId", "deviceName", "status"] // Default fields
+    });
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLDivElement>(null);
 
-    const getHeaders = (section: string) => {
-        return SECTION_TABLE_HEADERS[section] || UNIFIED_HEADERS;
+    const fetchDynamicSections = async () => {
+        try {
+            const res = await fetch("/api/assets/sections");
+            if (res.ok) {
+                const data = await res.json();
+                setDynamicSections(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch sections:", error);
+        }
+    };
+
+    const allSections = useMemo((): ITSection[] => {
+        const dynamic = dynamicSections.map((s: any) => ({
+            id: s.slug,
+            name: s.name,
+            icon: ICON_MAP[s.iconName] || Monitor,
+            isDynamic: true,
+            fields: s.fields
+        }));
+        return [...SECTIONS, ...dynamic];
+    }, [dynamicSections]);
+
+    const getHeaders = (sectionId: string): { label: string; key: string; icon?: any }[] => {
+        const dynamicSec = allSections.find(s => s.id === sectionId);
+        if (dynamicSec && dynamicSec.isDynamic && dynamicSec.fields) {
+            return [
+                { label: "S NO", key: "index" },
+                ...dynamicSec.fields
+            ];
+        }
+        return SECTION_TABLE_HEADERS[sectionId] || UNIFIED_HEADERS;
     };
 
     const formatIST = (dateString: string) => {
@@ -401,7 +514,12 @@ export default function Assets() {
             try {
                 const res = await fetch(`/api/assets/${encodeURIComponent(section)}`);
                 const data = await res.json();
-                setTableData(data);
+                if (Array.isArray(data)) {
+                    setTableData(data);
+                } else {
+                    setTableData([]);
+                    if (data.error) toast.error(data.error);
+                }
             } catch {
                 toast.error("Failed to fetch table data");
             } finally {
@@ -412,6 +530,7 @@ export default function Assets() {
 
     useEffect(() => {
         fetchUserRole();
+        fetchDynamicSections();
     }, []);
 
     useEffect(() => {
@@ -448,6 +567,51 @@ export default function Assets() {
             </div>
         );
     }
+
+    const handleCreateSection = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const fields = ALL_IT_FIELDS.filter(f => newSectionData.selectedFields.includes(f.key));
+        
+        await withLoading(async () => {
+            try {
+                const res = await fetch("/api/assets/sections", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: newSectionData.name,
+                        iconName: newSectionData.iconName,
+                        categoryId: "it_assets",
+                        categoryType: "IT",
+                        fields: fields
+                    }),
+                });
+
+                if (res.ok) {
+                    toast.success("Section Created Successfully");
+                    setIsAddSectionOpen(false);
+                    setNewSectionData({ name: "", iconName: "Monitor", selectedFields: ["assetId", "deviceName", "status"] });
+                    fetchDynamicSections();
+                } else {
+                    const result = await res.json();
+                    toast.error(result.error || "Failed to create section");
+                }
+            } catch {
+                toast.error("Network Error");
+            }
+        });
+    };
+
+    const handleFieldToggle = (fieldKey: string) => {
+        setNewSectionData(prev => {
+            const current = [...prev.selectedFields];
+            if (current.includes(fieldKey)) {
+                if (fieldKey === 'assetId' || fieldKey === 'deviceName') return prev;
+                return { ...prev, selectedFields: current.filter(k => k !== fieldKey) };
+            } else {
+                return { ...prev, selectedFields: [...current, fieldKey] };
+            }
+        });
+    };
 
     const scroll = (direction: "left" | "right") => {
         if (navRef.current) {
@@ -605,15 +769,15 @@ export default function Assets() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-gray-50 dark:bg-background">
+        <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-background">
             {/* Horizontal Nav */}
-            <div className="sticky top-0 z-30 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b dark:border-gray-800 px-4 py-3 rounded-md">
+            <div className="sticky top-16 z-30 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b dark:border-gray-800 px-4 py-3 rounded-md">
                 <div className="relative max-w-7xl mx-auto flex items-center">
                     <button onClick={() => scroll("left")} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors mr-2 hidden md:block group">
                         <ChevronLeft size={20} className="text-gray-500 group-hover:text-blue-600 rounded-full" />
                     </button>
                     <div ref={navRef} className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-2 scroll-smooth px-1">
-                        {SECTIONS.map((section) => (
+                        {allSections.map((section) => (
                             <button
                                 key={section.id}
                                 onClick={() => setActiveSection(section.id)}
@@ -651,13 +815,22 @@ export default function Assets() {
                     </div>
                     <div className="flex gap-3">
                         {activeSection === "overall" && (
-                            <button
-                                onClick={() => setIsImportModalOpen(true)}
-                                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
-                            >
-                                <Layers size={20} />
-                                Bulk Import
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => setIsImportModalOpen(true)}
+                                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
+                                >
+                                    <Layers size={20} />
+                                    Bulk Import
+                                </button>
+                                <button
+                                    onClick={() => setIsAddSectionOpen(true)}
+                                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black transition-all shadow-xl shadow-indigo-500/20 active:scale-95"
+                                >
+                                    <Plus size={20} />
+                                    Add Section
+                                </button>
+                            </>
                         )}
                         <button
                             onClick={() => {
@@ -698,7 +871,7 @@ export default function Assets() {
                                             onChange={(e) => { setSelectedAssetType(e.target.value); setFormData({}); }}
                                             className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700/50 rounded-2xl text-base font-bold text-gray-800 dark:text-gray-200 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 outline-none transition-all appearance-none cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"
                                         >
-                                            {SECTIONS.filter(s => s.id !== 'overall').map(s => (
+                                            {allSections.filter(s => s.id !== 'overall').map(s => (
                                                 <option key={s.id} value={s.id}>{s.name}</option>
                                             ))}
                                         </select>
@@ -739,7 +912,7 @@ export default function Assets() {
                 {/* Overall Hero Grid */}
                 {activeSection === "overall" ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {SECTIONS.filter(s => s.id !== 'overall').map((section, idx) => (
+                        {allSections.filter(s => s.id !== 'overall').map((section: ITSection, idx: number) => (
                             <AssetCard
                                 key={idx}
                                 title={section.name}
@@ -786,42 +959,44 @@ export default function Assets() {
                                                     <td className="px-6 py-5"><div className="h-5 bg-gray-200 dark:bg-gray-800 rounded-lg w-16 mx-auto"></div></td>
                                                 </tr>
                                             ))
-                                        ) : tableData.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={currentHeaders.length + 2} className="p-24 text-center">
-                                                    <div className="flex flex-col items-center gap-4 opacity-30">
-                                                        <Layers size={64} />
-                                                        <p className="text-xl font-bold uppercase tracking-widest">Vault is Empty</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ) : tableData.map((item, idx) => (
-                                            <tr key={(item._id as string) || idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
-                                                {currentHeaders.map((h, i) => (
-                                                    <td key={i} className={clsx(
-                                                        "px-6 py-5 text-sm font-bold transition-colors whitespace-nowrap",
-                                                        (h.key.toLowerCase().includes('id') || h.key.toLowerCase().includes('name')) ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
-                                                    )}>
-                                                        {h.key === "index" ? (
-                                                            <span className="w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-md text-[10px]">{(idx + 1).toString().padStart(2, '0')}</span>
-                                                        ) : (item[h.key] as React.ReactNode) || "-"}
+                                        ) : Array.isArray(tableData) ? (
+                                            tableData.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={currentHeaders.length + 2} className="p-24 text-center">
+                                                        <div className="flex flex-col items-center gap-4 opacity-30">
+                                                            <Layers size={64} />
+                                                            <p className="text-xl font-bold uppercase tracking-widest">Vault is Empty</p>
+                                                        </div>
                                                     </td>
-                                                ))}
-                                                <td className="px-6 py-5 text-[11px] text-gray-400 font-bold whitespace-nowrap">
-                                                    {formatIST((item.updatedAt as string))}
-                                                </td>
-                                                <td className="px-6 py-5 sticky right-0 bg-white group-hover:bg-blue-50/30 dark:bg-card dark:group-hover:bg-blue-900/10 transition-colors z-10 shadow-[-10px_0_15px_rgba(0,0,0,0.03)] dark:shadow-none">
-                                                    <div className="flex items-center justify-center gap-3">
-                                                        <button onClick={() => handleEdit(item)} className="p-2 text-blue-500 hover:bg-white dark:hover:bg-gray-800 rounded-xl shadow-sm transition-all hover:scale-110" title="Edit">
-                                                            <Edit2 size={16} />
-                                                        </button>
-                                                        <button onClick={() => handleDelete(item)} className="p-2 text-red-500 hover:bg-white dark:hover:bg-gray-800 rounded-xl shadow-sm transition-all hover:scale-110" title="Delete">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                </tr>
+                                            ) : tableData.map((item: any, idx: number) => (
+                                                <tr key={(item["_id"] as string) || idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                                    {currentHeaders.map((h: any, i: number) => (
+                                                        <td key={i} className={clsx(
+                                                            "px-6 py-5 text-sm font-bold transition-colors whitespace-nowrap",
+                                                            (h.key.toLowerCase().includes('id') || h.key.toLowerCase().includes('name')) ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+                                                        )}>
+                                                            {h.key === "index" ? (
+                                                                <span className="w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-md text-[10px]">{(idx + 1).toString().padStart(2, '0')}</span>
+                                                            ) : (item[h.key] as React.ReactNode) || "-"}
+                                                        </td>
+                                                    ))}
+                                                    <td className="px-6 py-5 text-[11px] text-gray-400 font-bold whitespace-nowrap">
+                                                        {formatIST((item.updatedAt as string))}
+                                                    </td>
+                                                    <td className="px-6 py-5 sticky right-0 bg-white group-hover:bg-blue-50/30 dark:bg-card dark:group-hover:bg-blue-900/10 transition-colors z-10 shadow-[-10px_0_15px_rgba(0,0,0,0.03)] dark:shadow-none">
+                                                        <div className="flex items-center justify-center gap-3">
+                                                            <button onClick={() => handleEdit(item)} className="p-2 text-blue-500 hover:bg-white dark:hover:bg-gray-800 rounded-xl shadow-sm transition-all hover:scale-110" title="Edit">
+                                                                <Edit2 size={16} />
+                                                            </button>
+                                                            <button onClick={() => handleDelete(item)} className="p-2 text-red-500 hover:bg-white dark:hover:bg-gray-800 rounded-xl shadow-sm transition-all hover:scale-110" title="Delete">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : null}
                                     </tbody>
                                 </table>
                             </div>
@@ -897,6 +1072,84 @@ export default function Assets() {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Add Section Modal */}
+                {isAddSectionOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="bg-white dark:bg-card w-full max-w-2xl rounded-[2.5rem] border dark:border-gray-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                            <div className="px-8 py-6 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-600 text-white">
+                                <h2 className="text-xl font-black uppercase tracking-tight">New IT Asset Section</h2>
+                                <button onClick={() => setIsAddSectionOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><X size={20} /></button>
+                            </div>
+                            <form onSubmit={handleCreateSection} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto no-scrollbar">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Section Name</label>
+                                        <input
+                                            required
+                                            value={newSectionData.name}
+                                            onChange={e => setNewSectionData({ ...newSectionData, name: e.target.value })}
+                                            className="w-full px-5 py-3 bg-gray-50 dark:bg-gray-800 border-2 dark:border-gray-700 rounded-2xl text-sm font-bold focus:border-indigo-500 outline-none transition-all"
+                                            placeholder="e.g. GPS Devices"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Icon</label>
+                                        <div className="grid grid-cols-5 gap-2 mt-1">
+                                            {ICON_OPTIONS.slice(0, 10).map(opt => (
+                                                <button
+                                                    key={opt.name}
+                                                    type="button"
+                                                    onClick={() => setNewSectionData({ ...newSectionData, iconName: opt.name })}
+                                                    className={clsx(
+                                                        "p-3 rounded-xl flex items-center justify-center transition-all",
+                                                        newSectionData.iconName === opt.name ? "bg-indigo-600 text-white" : "bg-gray-50 dark:bg-gray-800 text-gray-400"
+                                                    )}
+                                                >
+                                                    <opt.icon size={18} />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 mb-3 block">Configure Section Fields</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border-2 dark:border-gray-700/50">
+                                        {ALL_IT_FIELDS.map(field => (
+                                            <label 
+                                                key={field.key} 
+                                                className={clsx(
+                                                    "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border-2",
+                                                    newSectionData.selectedFields.includes(field.key) 
+                                                        ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800" 
+                                                        : "bg-white dark:bg-gray-800 border-transparent"
+                                                )}
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                    checked={newSectionData.selectedFields.includes(field.key)}
+                                                    onChange={() => handleFieldToggle(field.key)}
+                                                />
+                                                <span className={clsx(
+                                                    "text-[10px] font-black leading-tight uppercase tracking-tight",
+                                                    newSectionData.selectedFields.includes(field.key) ? "text-indigo-600 dark:text-indigo-400" : "text-gray-500"
+                                                )}>
+                                                    {field.label}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl hover:-translate-y-1 transition-all active:scale-95">
+                                    Create Custom IT Section
+                                </button>
+                            </form>
                         </div>
                     </div>
                 )}

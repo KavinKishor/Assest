@@ -11,8 +11,10 @@ export async function GET() {
         }
 
         await connectToDatabase();
-        const associates = await User.find({ role: "IT_Associate" })
-            .select("name email role _id")
+        const associates = await User.find({
+            role: "IT_Associate"
+        })
+            .select("name email role _id isVerified")
             .sort({ name: 1 });
 
         return NextResponse.json(associates);
@@ -21,3 +23,4 @@ export async function GET() {
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
+

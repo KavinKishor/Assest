@@ -144,6 +144,9 @@ const BiometricSchema = new Schema({
     location: String
 }, baseOptions);
 
+// Dynamic/Custom Asset Schema
+const DynamicAssetSchema = new Schema({}, { ...baseOptions, strict: false });
+
 // Unified/Simplified Schema for new sections
 const UnifiedAssetSchema = new Schema({
     assetId: { type: String, required: true },
@@ -175,7 +178,7 @@ export const Moniters = createUnified("Moniters");
 export const Keyboards = createUnified("Keyboards");
 export const Mouse = createUnified("Mouse");
 
-export const ModelMap: Record<string, mongoose.Model<unknown>> = {
+const StaticModelMap: Record<string, mongoose.Model<any>> = {
     desktop: Desktop,
     laptop: Laptop,
     server: Server,
@@ -195,3 +198,26 @@ export const ModelMap: Record<string, mongoose.Model<unknown>> = {
     keyboards: Keyboards,
     mouse: Mouse
 };
+
+export const ModelMap = new Proxy(StaticModelMap, {
+    get(target, prop: string | symbol) {
+        if (typeof prop !== 'string') return (target as any)[prop];
+        if (target[prop]) return target[prop];
+        if (prop.startsWith('_') || prop === 'constructor' || prop === 'prototype' || prop === 'then') return undefined;
+        
+        const modelName = `CustomAsset_${prop.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        if (!mongoose.models[modelName]) {
+            return mongoose.model(modelName, DynamicAssetSchema);
+        }
+        return mongoose.models[modelName];
+    },
+    ownKeys(target) {
+        return Object.keys(target);
+    },
+    getOwnPropertyDescriptor(target, prop) {
+        if (typeof prop === 'string' && target[prop]) {
+            return Object.getOwnPropertyDescriptor(target, prop);
+        }
+        return undefined;
+    }
+});

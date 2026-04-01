@@ -7,6 +7,7 @@ import Notification from "@/lib/models/Notification";
 import { sendAssetRequestEmail } from "@/lib/email";
 import { ModelMap } from "@/lib/models/sections/AssetModels";
 import { OfficeModelMap } from "@/lib/models/sections/OfficeAssetModels";
+import { SoftwareModelMap } from "@/lib/models/sections/SoftwareModels";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -29,16 +30,36 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         if (status === "Approved") {
             const { type, category, section, assetData } = assetRequest;
-            const model = category === "IT_Assets" ? ModelMap[section] : OfficeModelMap[section];
+            let model = category === "IT_Assets" ? ModelMap[section] :
+                category === "Office_Assets" ? OfficeModelMap[section] :
+                    category === "Softwares" ? SoftwareModelMap[section] : null;
 
-            if (!model) throw new Error("Invalid section model");
+            let isDynamic = false;
+            if (!model && category === "Office_Assets") {
+                const Section = (await import("@/lib/models/sections/Section")).default;
+                const sectionExists = await Section.findOne({ slug: section });
+                // eslint-disable-next-line no-console
+                console.log(`Checking dynamic section for ${section}:`, sectionExists ? "Found" : "Not Found");
+                if (sectionExists) {
+                    model = (await import("@/lib/models/sections/DynamicOfficeAsset")).default;
+                    isDynamic = true;
+                }
+            }
+
+            if (!model) {
+                // eslint-disable-next-line no-console
+                console.error(`Model not found for category: ${category}, section: ${section}`);
+                throw new Error(`Invalid section model for category: ${category}, section: ${section}`);
+            }
+
+            const dataWithSection = isDynamic ? { ...assetData, sectionSlug: section } : assetData;
 
             if (type === "CREATE") {
-                await model.create(assetData);
+                await model.create(dataWithSection);
             } else if (type === "UPDATE") {
                 const assetId = assetData._id || assetData.id;
                 if (!assetId) throw new Error("Asset ID missing for update");
-                const { _id, id: _, ...updateFields } = assetData;
+                const { _id, id: _, ...updateFields } = dataWithSection;
                 const updated = await model.findByIdAndUpdate(assetId, updateFields, { new: true });
                 if (!updated) throw new Error("Asset to update not found");
             } else if (type === "DELETE") {

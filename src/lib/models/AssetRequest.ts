@@ -3,7 +3,7 @@ import mongoose, { Schema, type Document } from "mongoose";
 export interface IAssetRequest extends Document {
     reqId: string;
     type: "CREATE" | "UPDATE" | "DELETE";
-    category: "IT_Assets" | "Office_Assets";
+    category: "IT_Assets" | "Office_Assets" | "Softwares";
     section: string;
     assetData: Record<string, unknown>;
     creator: {
@@ -27,7 +27,7 @@ const AssetRequestSchema: Schema = new Schema(
     {
         reqId: { type: String, required: true, unique: true },
         type: { type: String, enum: ["CREATE", "UPDATE", "DELETE"], required: true },
-        category: { type: String, enum: ["IT_Assets", "Office_Assets"], required: true },
+        category: { type: String, enum: ["IT_Assets", "Office_Assets", "Softwares"], required: true },
         section: { type: String, required: true },
         assetData: { type: Schema.Types.Mixed, required: true },
         creator: {

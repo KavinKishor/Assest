@@ -62,7 +62,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="space-y-2 mb-10">
-                        <h1 className="text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+                        <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                             Welcome back
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 font-medium">
@@ -116,18 +116,9 @@ export default function LoginPage() {
                         </Button>
                     </form>
 
-                    <div className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-900 text-center">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                            Don&apos;t have an account?{" "}
-                            <button
-                                onClick={() => router.push("/register")}
-                                className="text-blue-600 font-bold hover:underline"
-                            >
-                                Request Access
-                            </button>
-                        </p>
-                    </div>
+                    {/* Registration link removed as per requirement */}
                 </motion.div>
+
             </div>
 
             {/* Right Column: Animation */}

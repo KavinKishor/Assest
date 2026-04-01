@@ -34,7 +34,7 @@ export interface AssetDetail {
     category: AssetCategory;
 }
 
-export type AssetVariant = "blue" | "green" | "orange" | "purple" | "red";
+export type AssetVariant = "blue" | "green" | "orange" | "purple" | "red" | "indigo" | "pink";
 
 export interface AssetSummary {
     id: string;

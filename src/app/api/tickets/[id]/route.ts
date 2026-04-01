@@ -58,23 +58,23 @@ export async function PATCH(
         }
 
         // Role-based validation
-        const isManagerOrVP = session.role === "Manager" || session.role === "VP";
+        const isManagement = ["Manager", "VP", "CEO"].includes(session.role);
 
         // Global check: Prevent ANY updates before manager approval for non-management roles
-        if (!isManagerOrVP && oldTicket.approvalStatus !== "Approved") {
+        if (!isManagement && oldTicket.approvalStatus !== "Approved") {
             return NextResponse.json({
                 error: "Updates are disabled until the ticket is Approved by a Manager"
             }, { status: 403 });
         }
 
         // Only Managers/VPs can change approval status
-        if (data.approvalStatus && data.approvalStatus !== oldTicket.approvalStatus && !isManagerOrVP) {
-            return NextResponse.json({ error: "Only Managers or VPs can approve tickets" }, { status: 403 });
+        if (data.approvalStatus && data.approvalStatus !== oldTicket.approvalStatus && !isManagement) {
+            return NextResponse.json({ error: "Only Managers, VPs or CEO can approve tickets" }, { status: 403 });
         }
 
         // Only Managers/VPs can change assignments
-        if (data.assignedTo && String(data.assignedTo) !== String(oldTicket.assignedTo) && !isManagerOrVP) {
-            return NextResponse.json({ error: "Only Managers or VPs can assign tickets" }, { status: 403 });
+        if (data.assignedTo && String(data.assignedTo) !== String(oldTicket.assignedTo) && !isManagement) {
+            return NextResponse.json({ error: "Only Managers, VPs or CEO can assign tickets" }, { status: 403 });
         }
 
         // IT Associates can only update tickets assigned to them
@@ -86,8 +86,8 @@ export async function PATCH(
             return NextResponse.json({ error: "Cannot assign ticket to its creator" }, { status: 400 });
         }
 
-        // If approval status OR assignment is being updated by a Manager/VP, record them
-        if ((data.approvalStatus || data.assignedTo) && (session.role === "Manager" || session.role === "VP")) {
+        // If approval status OR assignment is being updated by a Management member, record them
+        if ((data.approvalStatus || data.assignedTo) && isManagement) {
             data.approvalManager = session.id;
         }
 
@@ -134,7 +134,7 @@ export async function PATCH(
         // status updated by anyone! should notify Management and IT_Admin
         // and also the people involved (Creator, Assignee)
         const staffUsers = await User.find({
-            role: { $in: ["Manager", "VP", "IT_Admin"] },
+            role: { $in: ["Manager", "VP", "IT_Admin", "CEO"] },
         });
 
         staffUsers.forEach(user => recipients.add(String(user._id)));

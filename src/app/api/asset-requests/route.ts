@@ -19,10 +19,15 @@ export async function GET(req: Request) {
         const query: Record<string, string> = {};
         if (category) query.category = category;
 
-        // Associates only see their own requests
-        if (session.role === "IT_Associate") {
+        const isITOrManagement = ["IT_Admin", "IT_Associate", "Manager", "VP", "CEO"].includes(session.role);
+
+        if (!isITOrManagement) {
+            // Regular employees only see their own requests
             query["creator.userId"] = session.id;
         }
+
+
+
 
         const requests = await AssetRequest.find(query).sort({ createdAt: -1 });
         return NextResponse.json(requests);
@@ -36,8 +41,8 @@ export async function POST(req: Request) {
         const session = await getSession();
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        // Only IT Associates and IT Admins can create requests
-        if (!["IT_Associate", "IT_Admin"].includes(session.role)) {
+        // Managers, VPs, and IT staff can create requests
+        if (!["IT_Associate", "IT_Admin", "Manager", "VP"].includes(session.role)) {
             return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
         }
 

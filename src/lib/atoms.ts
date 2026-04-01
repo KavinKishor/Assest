@@ -43,8 +43,12 @@ export const ticketChartDataAtom = atom((get) => {
         result.push({ date: dateStr, type: "resolved", count: counts.resolved });
       }
     });
-    return result.sort((a, b) => a.date.localeCompare(b.date));
+
+    if (result.length > 0) {
+      return result.sort((a, b) => a.date.localeCompare(b.date));
+    }
   }
+
 
   // Fallback to mock data if no real data
   return averageTicketsCreated

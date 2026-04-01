@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import { OfficeModelMap } from "@/lib/models/sections/OfficeAssetModels";
+import { SoftwareModelMap } from "@/lib/models/sections/SoftwareModels";
 
 export async function GET(
     request: NextRequest,
@@ -11,16 +11,13 @@ export async function GET(
         await connectToDatabase();
         const { section } = await params;
         const decodedSection = decodeURIComponent(section).toLowerCase();
-        const Model = OfficeModelMap[decodedSection];
+        const Model = SoftwareModelMap[decodedSection];
 
-        if (Model) {
-            const data = await Model.find().sort({ createdAt: -1 });
-            return NextResponse.json(data);
+        if (!Model) {
+            return NextResponse.json({ error: "Invalid section" }, { status: 400 });
         }
 
-        // Check if it's a dynamic section
-        const DynamicOfficeAsset = (await import("@/lib/models/sections/DynamicOfficeAsset")).default;
-        const data = await DynamicOfficeAsset.find({ sectionSlug: decodedSection }).sort({ createdAt: -1 });
+        const data = await Model.find().sort({ createdAt: -1 });
         return NextResponse.json(data);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -36,7 +33,7 @@ export async function POST(
         await connectToDatabase();
         const { section } = await params;
         const decodedSection = decodeURIComponent(section).toLowerCase();
-        const Model = OfficeModelMap[decodedSection];
+        const Model = SoftwareModelMap[decodedSection];
         const body = await request.json();
 
         if (!Model) {
@@ -59,7 +56,7 @@ export async function PUT(
         await connectToDatabase();
         const { section } = await params;
         const decodedSection = decodeURIComponent(section).toLowerCase();
-        const Model = OfficeModelMap[decodedSection];
+        const Model = SoftwareModelMap[decodedSection];
         const body = await request.json();
         const { id, ...updateData } = body;
 
@@ -79,5 +76,5 @@ export async function DELETE(
     _request: NextRequest,
     _params: { params: Promise<{ section: string }> }
 ) {
-    return NextResponse.json({ message: "Delete requires manager approval (Coming Soon)" }, { status: 403 });
+    return NextResponse.json({ message: "Delete requires manager approval" }, { status: 403 });
 }
